@@ -357,11 +357,20 @@ get_node_map() ->
                 true ->
                      {bummer, bummer}
                 end
-         end || T <- ets:tab2list(sys_dist)]
+         end || T <- try
+                         ets:tab2list(sys_dist)
+                     catch _:_ ->
+                             []
+                     end]
     catch X:Y ->
-            error_logger:error_msg("~s:get_node_map: ~p ~p @ ~p\n",
-                                   [?MODULE, X, Y, erlang:get_stacktrace()]),
-            []
+            case ets:info(sys_dist, name) of
+                undefined ->
+                    [];
+                sys_dist ->
+                    error_logger:error_msg("~s:get_node_map: ~p ~p @ ~p\n",
+                                           [?MODULE, X, Y, erlang:get_stacktrace()]),
+                    []
+            end
     end.
 
 -ifdef(TEST).
